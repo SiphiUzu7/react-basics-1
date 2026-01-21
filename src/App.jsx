@@ -1,23 +1,31 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import "./styles.css"
+import { MusicianListForm } from "./MusicianListForm"
+import { MusicianList } from "./MusicianList"
 
+ 
 export default function App() {
-  const [musicianItem, setMusicianItem] = useState([""])
-  const [toListen, setToListen] = useState([])
+  const [toListen, setToListen] = useState(() => {
+    const localValue = localStorage.getItem("ITEM")
+    if (localValue == null) return []
 
-  function handleSubmit(e) {
-    e.preventDefault()
+    return JSON.parse(localValue)
+  })
 
-    setToListen(currentToListen => {
-      return[
-        ...currentToListen,
-        {id: crypto.randomUUID(), title: musicianItem, completed: false}
-      
-      ]
-    })
+  useEffect(() => {
+    localStorage.setItem("ITEM", JSON.stringify(toListen))
+  }, [toListen])
 
-    setMusicianItem("")
+  function addToListen(musicianItem) {
+      setToListen(currentToListen => {
+        return[
+          ...currentToListen,
+          {id: crypto.randomUUID(), title: musicianItem, completed: false}
+        
+        ]
+      })
   }
+
 
   function toggleToListen(id, completed) {
     setToListen(currentToListen => {
@@ -38,33 +46,12 @@ export default function App() {
 
   return (
     <>
+    
       <h1>Musician Bucket List</h1>
-      <form onSubmit={handleSubmit} className="new-item-form">
-        <div className="form-row">
-          <label htmlFor="item">Musician Name</label>
-          <input value={musicianItem} onChange={e => setMusicianItem(e.target.value)} type="text" id="item" />
-        </div>
-        <button className="btn">Add Musician</button>
-      </form>
+      <MusicianListForm onSubmit={addToListen} />  
       <h2 className="header">My List</h2>
-      <ul className="list">
-        {toListen.map(toListen => {
-          return  (
-            <li key={toListen.id}>
-              <label>
-                <input type="checkbox" 
-                checked={toListen.completed} 
-                onChange={e => toggleToListen(toListen.id, e.target.checked)}
-                />
-                {toListen.title}
-              </label>
-              <button 
-              onClick={() => deleteToListen(toListen.id)} 
-              className="btn btn-danger">Delete</button>
-            </li>
-          )
-        })}
-      </ul>
+      <MusicianList toListen={toListen} toggleToListen={toggleToListen} deleteToListen={deleteToListen} />
+
     </>
 
   )
